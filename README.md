@@ -1,12 +1,13 @@
 # clembartmedia.com
 
-One-page site for Clembart Media, hosted on Cloudflare Pages, with Stripe embedded checkout.
+One-page site for Clembart Media, hosted on a Cloudflare Worker (broken-wood-677d), with Stripe embedded checkout.
 
-- `index.html`: the website. Package buttons open the on-site checkout.
-- `return.html`: the page customers land on after paying.
-- `functions/api/`: small server functions Cloudflare runs. They create Stripe checkout sessions using the secret key stored in Cloudflare.
+- `public/index.html`: the website. Package buttons open the on-site checkout.
+- `public/return.html`: the page customers land on after paying.
+- `src/worker.js`: the small server code Cloudflare runs. It creates Stripe checkout sessions using the secret key stored in Cloudflare.
+- `wrangler.jsonc`: tells Cloudflare how to deploy the Worker.
 
-## Cloudflare settings (Settings → Variables and Secrets)
+## Cloudflare settings (Worker → Settings → Variables and Secrets)
 | Name | Value |
 | --- | --- |
 | `STRIPE_SECRET_KEY` | Your Stripe secret or restricted key (store as **Secret**) |
