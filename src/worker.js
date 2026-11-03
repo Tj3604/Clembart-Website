@@ -2,13 +2,17 @@
 // Serves the website from /public and handles the Stripe checkout API under /api/.
 // Secrets (STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY) are set in the Cloudflare dashboard, never in this repo.
 
-// TEST-mode price IDs by default; override with PRICE_TRIAL / PRICE_STARTER / PRICE_GROWTH / PRICE_PREMIUM for live mode.
+// Price IDs for each package. The Worker picks live or test prices automatically
+// based on whether STRIPE_SECRET_KEY is a live key (sk_live_/rk_live_) or a test key.
+// PRICE_TRIAL / PRICE_STARTER / PRICE_GROWTH / PRICE_PREMIUM env vars override both.
 const PLANS = {
-  trial:   { env: "PRICE_TRIAL",   price: "price_1UXmk52HYX1I1J0EfRRL0g4r", mode: "payment" },
-  starter: { env: "PRICE_STARTER", price: "price_1UXmk82HYX1I1J0EWAU3tRDJ", mode: "subscription" },
-  growth:  { env: "PRICE_GROWTH",  price: "price_1UXmkB2HYX1I1J0EsYn5kTDO", mode: "subscription" },
-  premium: { env: "PRICE_PREMIUM", price: "price_1UXmkD2HYX1I1J0ElMN6QhX2", mode: "subscription" },
+  trial:   { env: "PRICE_TRIAL",   mode: "payment",      live: "price_1UXmtvFrj3MkCOVoegOMYVry", test: "price_1UXmk52HYX1I1J0EfRRL0g4r" },
+  starter: { env: "PRICE_STARTER", mode: "subscription", live: "price_1UXmtvFrj3MkCOVowyUFAfBH", test: "price_1UXmk82HYX1I1J0EWAU3tRDJ" },
+  growth:  { env: "PRICE_GROWTH",  mode: "subscription", live: "price_1UXmtvFrj3MkCOVonZVQgo0L", test: "price_1UXmkB2HYX1I1J0EsYn5kTDO" },
+  premium: { env: "PRICE_PREMIUM", mode: "subscription", live: "price_1UXmtvFrj3MkCOVoN37e80YT", test: "price_1UXmkD2HYX1I1J0ElMN6QhX2" },
 };
+const isLive = (env) => /^(sk|rk)_live_/.test(env.STRIPE_SECRET_KEY || "");
+const priceFor = (env, p) => env[p.env] || (isLive(env) ? p.live : p.test);
 
 function encode(obj, prefix, out = []) {
   for (const [k, v] of Object.entries(obj)) {
@@ -44,7 +48,7 @@ async function createSession(request, env) {
   const origin = new URL(request.url).origin;
   const params = {
     mode: p.mode,
-    line_items: [{ price: env[p.env] || p.price, quantity: 1 }],
+    line_items: [{ price: priceFor(env, p), quantity: 1 }],
     return_url: `${origin}/return.html?session_id={CHECKOUT_SESSION_ID}`,
     custom_fields: [{ key: "businessname", label: { type: "custom", custom: "Business name" }, type: "text" }],
     metadata: { package: plan },
