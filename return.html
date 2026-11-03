@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thank you | Clembart Media</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Manrope:wght@400;600&display=swap">
+<style>
+:root{--bg:#0A0A0A;--surface:#131312;--line:#2A2A27;--fg:#F5F4F0;--muted:#A6A49C;--gold:#C9A35A;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);font-family:Manrope,system-ui,sans-serif;line-height:1.6;padding:24px max(16px,env(safe-area-inset-left,0px))}
+.card{max-width:560px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:40px 32px;display:grid;gap:16px;text-align:center}
+h1{font-family:Montserrat,Arial,sans-serif;font-weight:800;font-size:1.75rem;margin:0;text-transform:uppercase;letter-spacing:.02em}
+p{margin:0;color:var(--muted)}
+.eyebrow{font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:.75rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase}
+a.btn{justify-self:center;margin-top:8px;font-family:Montserrat,Arial,sans-serif;font-weight:700;text-decoration:none;color:var(--bg);background:var(--fg);padding:12px 22px;border-radius:999px}
+a.btn:hover{background:var(--gold)}
+</style>
+</head>
+<body>
+<main class="card" id="card">
+  <p class="eyebrow">Clembart Media</p>
+  <h1 id="title">Checking your payment&hellip;</h1>
+  <p id="msg">One moment.</p>
+  <a class="btn" href="/">Back to clembartmedia.com</a>
+</main>
+<script>
+(async function(){
+  var t = document.getElementById('title'), m = document.getElementById('msg');
+  var id = new URLSearchParams(location.search).get('session_id');
+  if (!id) { t.textContent = 'No payment found'; m.textContent = 'If you were charged, email clembart.media@gmail.com and we will sort it out.'; return; }
+  try {
+    var r = await fetch('/api/session-status?session_id=' + encodeURIComponent(id));
+    var d = await r.json();
+    if (d.status === 'complete') {
+      t.textContent = 'Thank you!';
+      m.textContent = 'Your payment went through' + (d.email ? ' and a receipt is on its way to ' + d.email : '') + '. Thomas will email you within one business day to get started.';
+    } else if (d.status === 'open') {
+      t.textContent = 'Payment not finished';
+      m.textContent = 'Your payment did not go through. Head back and try again, or email clembart.media@gmail.com.';
+    } else { throw new Error('unknown'); }
+  } catch (e) {
+    t.textContent = 'We could not confirm your payment';
+    m.textContent = 'If you were charged, you will get a receipt by email. Questions? clembart.media@gmail.com';
+  }
+})();
+</script>
+</body>
+</html>
